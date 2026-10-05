@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="48" fill="#047857"/>
+  <circle cx="50" cy="50" r="42" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <!-- Rising Sun -->
+  <path d="M 30 55 A 20 20 0 0 1 70 55 Z" fill="#ea580c"/>
+  <line x1="50" y1="26" x2="50" y2="20" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
+  <line x1="36" y1="31" x2="31" y2="26" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
+  <line x1="64" y1="31" x2="69" y2="26" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
+  <!-- Green field & tree -->
+  <path d="M 12 68 Q 50 56 88 68 L 88 88 Q 50 92 12 88 Z" fill="#15803d"/>
+  <!-- Tree of community -->
+  <circle cx="50" cy="50" r="10" fill="#047857"/>
+  <circle cx="43" cy="54" r="7" fill="#16a34a"/>
+  <circle cx="57" cy="54" r="7" fill="#16a34a"/>
+  <rect x="48" y="56" width="4" height="12" fill="#78350f"/>
+  <circle cx="50" cy="50" r="2.5" fill="#fef08a"/>
+</svg>
