@@ -8,7 +8,9 @@ import {
   Send, 
   CheckCircle2, 
   ShieldAlert, 
-  Compass 
+  Compass,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { contactData } from '../data/contactData';
 
@@ -22,22 +24,42 @@ export default function ContactPage({ lang }) {
     subject: '',
     message: ''
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submittedTicket, setSubmittedTicket] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!messageForm.name || !messageForm.message) return;
-    setSubmitted(true);
-    setTimeout(() => {
+    setSubmitError('');
+    if (!messageForm.name.trim() || !messageForm.message.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messageForm)
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || (isHi ? 'संदेश भेजने में विफल। कृपया पुनः प्रयास करें।' : 'Failed to send message.'));
+      }
+
+      setSubmittedTicket(data.ticketId);
       setMessageForm({ name: '', phone: '', subject: '', message: '' });
-      setSubmitted(false);
-    }, 5000);
+    } catch (err) {
+      console.error('Contact submission error:', err);
+      setSubmitError(err.message || (isHi ? 'सर्वर से संपर्क करने में असमर्थ।' : 'Network error.'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
       {/* 1. Header Banner */}
-      <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white rounded-2xl p-6 sm:p-10 shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white rounded-3xl p-6 sm:p-10 shadow-lg relative overflow-hidden">
         <div className="max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-800 text-emerald-200 text-xs font-semibold">
             <Building2 className="w-3.5 h-3.5 text-amber-400" />
@@ -60,13 +82,13 @@ export default function ContactPage({ lang }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left: Address and Office Details */}
         <div className="lg:col-span-6 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-emerald-700" />
               <span>{isHi ? 'कार्यालय एवं भौगोलिक पता' : 'Office & Location Address'}</span>
             </h2>
 
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-slate-700">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-slate-700">
               <span className="font-bold text-sm text-slate-900 block">
                 {isHi ? address.panchayatOfficeHi : address.panchayatOfficeEn}
               </span>
@@ -84,7 +106,7 @@ export default function ContactPage({ lang }) {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
+            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
               <div className="flex items-center gap-2 font-bold">
                 <Clock className="w-4 h-4 text-emerald-700" />
                 <span>{isHi ? 'कार्यालय कार्य-समय:' : 'Office Timings:'}</span>
@@ -95,7 +117,7 @@ export default function ContactPage({ lang }) {
             </div>
 
             {/* Note on Phone/Email Accuracy Rule */}
-            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
               <div className="flex items-center gap-1.5 font-bold">
                 <ShieldAlert className="w-4 h-4 text-amber-600" />
                 <span>{isHi ? 'दूरभाष एवं ई-मेल नीति (Strict Data Policy):' : 'Phone & Email Veracity Policy:'}</span>
@@ -109,14 +131,14 @@ export default function ContactPage({ lang }) {
             </div>
           </div>
 
-          {/* Interactive Map Placeholder */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
+          {/* Interactive Map Reference */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-3">
             <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Compass className="w-4 h-4 text-emerald-700" />
               <span>{isHi ? 'मानचित्र अवस्थिति (Map Reference)' : 'Map Reference'}</span>
             </h3>
 
-            <div className="w-full h-64 rounded-xl bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center border-2 border-slate-800 relative overflow-hidden group">
+            <div className="w-full h-64 rounded-2xl bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center border-2 border-slate-800 relative overflow-hidden group">
               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
               <div className="relative z-10 space-y-2">
                 <MapPin className="w-10 h-10 text-amber-400 mx-auto animate-bounce" />
@@ -144,7 +166,7 @@ export default function ContactPage({ lang }) {
 
         {/* Right: Citizen Contact Form */}
         <div className="lg:col-span-6 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
             <div>
               <h2 className="text-xl font-bold text-slate-900">
                 {isHi ? 'नागरिक संदेश एवं पूछताछ प्रपत्र' : 'Send a Message / Query'}
@@ -154,15 +176,36 @@ export default function ContactPage({ lang }) {
               </p>
             </div>
 
-            {submitted ? (
-              <div className="p-6 rounded-xl bg-emerald-50 border border-emerald-300 text-center space-y-2 animate-in fade-in">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {isHi ? 'संदेश सफलतापूर्वक प्रेषित हुआ!' : 'Message Sent Successfully!'}
+            {submitError && (
+              <div className="p-3.5 bg-red-50 border border-red-300 rounded-xl text-red-700 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{submitError}</span>
+              </div>
+            )}
+
+            {submittedTicket ? (
+              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-300 text-center space-y-3 animate-in fade-in">
+                <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+                <h3 className="font-bold text-slate-900 text-base">
+                  {isHi ? 'संदेश सुरक्षित रूप से दर्ज हुआ!' : 'Message Recorded Successfully!'}
                 </h3>
-                <p className="text-xs text-slate-600">
-                  {isHi ? 'आपके संदेश का अवलोकन कार्यालय दिवस में किया जाएगा। धन्यवाद।' : 'Your message has been queued for review during office hours.'}
+                <p className="text-xs text-slate-600 max-w-sm mx-auto">
+                  {isHi 
+                    ? 'आपका संदेश ग्राम सचिवालय के डेटाबेस में पंजीकृत कर लिया गया है। संदर्भ टोकन:' 
+                    : 'Your message has been permanently queued in the portal secretariat database. Reference ID:'}
                 </p>
+                <div className="p-2.5 bg-white border border-emerald-300 font-mono font-bold text-sm text-emerald-950 rounded-xl inline-block px-4">
+                  {submittedTicket}
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSubmittedTicket(null)}
+                    className="px-4 py-2 bg-emerald-800 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 cursor-pointer"
+                  >
+                    {isHi ? 'नया संदेश भेजें' : 'Send Another Message'}
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -176,7 +219,7 @@ export default function ContactPage({ lang }) {
                     value={messageForm.name}
                     onChange={(e) => setMessageForm({ ...messageForm, name: e.target.value })}
                     placeholder={isHi ? "उदा. कुलदीप सिंह" : "e.g. Kuldeep Singh"}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                   />
                 </div>
 
@@ -190,7 +233,7 @@ export default function ContactPage({ lang }) {
                     value={messageForm.phone}
                     onChange={(e) => setMessageForm({ ...messageForm, phone: e.target.value.replace(/\D/g, '') })}
                     placeholder="9829000000"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                   />
                 </div>
 
@@ -203,7 +246,7 @@ export default function ContactPage({ lang }) {
                     value={messageForm.subject}
                     onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })}
                     placeholder={isHi ? "उदा. बालिका पुस्तकालय सदस्यता बाबत" : "Subject of inquiry"}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                   />
                 </div>
 
@@ -217,33 +260,43 @@ export default function ContactPage({ lang }) {
                     value={messageForm.message}
                     onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
                     placeholder={isHi ? "अपना संदेश यहाँ लिखें..." : "Type your message..."}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition cursor-pointer flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full py-3 bg-emerald-800 hover:bg-emerald-700 disabled:bg-slate-400 text-white font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{isHi ? 'संदेश भेजें (Send Message)' : 'Send Message'}</span>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>{isHi ? 'संदेश भेजा जा रहा है...' : 'Sending...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{isHi ? 'संदेश भेजें (Send Message)' : 'Send Message'}</span>
+                    </>
+                  )}
                 </button>
               </form>
             )}
           </div>
 
           {/* Emergency Helplines Box */}
-          <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-sm space-y-4">
             <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
               <PhoneCall className="w-4 h-4" />
               <span>{isHi ? 'महत्वपूर्ण आपातकालीन एवं जनसुविधा नंबर' : 'Emergency Toll-Free Lines'}</span>
             </h3>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-2 gap-2.5 text-xs">
               {emergencyNumbers.map((em, i) => (
-                <div key={i} className="p-2.5 bg-slate-800 rounded-lg border border-slate-700 flex justify-between items-center">
-                  <span className="text-slate-300 text-[11px]">{em.titleHi}</span>
-                  <span className="font-bold text-amber-400 bg-slate-900 px-2 py-0.5 rounded">{em.number}</span>
+                <div key={i} className="p-3 bg-slate-800 rounded-xl border border-slate-700 flex justify-between items-center">
+                  <span className="text-slate-300 text-[11px] font-medium">{em.titleHi}</span>
+                  <span className="font-bold text-amber-400 bg-slate-900 px-2.5 py-0.5 rounded-lg">{em.number}</span>
                 </div>
               ))}
             </div>
